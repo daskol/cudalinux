@@ -27,6 +27,24 @@ else
 	exit 1
 fi
 
+# get CUDA version to choose suitable docker image
+if [ -z "${CUDA_VERSION+x}" ]; then
+	echo "Expected CUDA version to be set (e.g. CUDA_VERSION=11.3)."
+	exit 1
+fi
+
+# use CUDA version as a image tag
+if [ -z "${COMMIT_SHA+x}" ]; then
+    echo "Initialize COMMIT_SHA variable with a value of CUDA_VERSION"
+    COMMIT_SHA=$(cut -f 1,2 -d. <<< ${CUDA_VERSION})
+fi
+
+# setup default DOCKER_IMAGE_NAME variable if it is not set
+if [ -z "${DOCKER_IMAGE_NAME+x}" ]; then
+	echo "Base docker image name is not set: use empty prefix."
+	DOCKER_IMAGE_NAME=
+fi
+
 # setup BASEIMAGE and its specific properties
 if [ "${POLICY}" == "manylinux2010" ]; then
 	if [ "${PLATFORM}" == "x86_64" ]; then
@@ -48,14 +66,16 @@ elif [ "${POLICY}" == "manylinux2014" ]; then
 	if [ "${PLATFORM}" == "s390x" ]; then
 		BASEIMAGE="s390x/clefos:7"
 	else
-		BASEIMAGE="${MULTIARCH_PREFIX}centos:7"
+		# NOTE We are interesed onlu in manylinux2014_x86_64. So, all
+		# modifications are local.
+		BASEIMAGE="nvcr.io/nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-centos7"
 	fi
 	DEVTOOLSET_ROOTPATH="/opt/rh/devtoolset-10/root"
 	PREPEND_PATH="${DEVTOOLSET_ROOTPATH}/usr/bin:"
 	if [ "${PLATFORM}" == "i686" ]; then
 		LD_LIBRARY_PATH_ARG="${DEVTOOLSET_ROOTPATH}/usr/lib:${DEVTOOLSET_ROOTPATH}/usr/lib/dyninst"
 	else
-		LD_LIBRARY_PATH_ARG="${DEVTOOLSET_ROOTPATH}/usr/lib64:${DEVTOOLSET_ROOTPATH}/usr/lib:${DEVTOOLSET_ROOTPATH}/usr/lib64/dyninst:${DEVTOOLSET_ROOTPATH}/usr/lib/dyninst:/usr/local/lib64"
+		LD_LIBRARY_PATH_ARG="${DEVTOOLSET_ROOTPATH}/usr/lib64:${DEVTOOLSET_ROOTPATH}/usr/lib:${DEVTOOLSET_ROOTPATH}/usr/lib64/dyninst:${DEVTOOLSET_ROOTPATH}/usr/lib/dyninst:/usr/local/lib64:/usr/local/lib"
 	fi
 elif [ "${POLICY}" == "manylinux_2_24" ]; then
 	BASEIMAGE="${MULTIARCH_PREFIX}debian:9"
@@ -84,7 +104,7 @@ export LD_LIBRARY_PATH_ARG
 BUILD_ARGS_COMMON="
 	--build-arg POLICY --build-arg PLATFORM --build-arg BASEIMAGE
 	--build-arg DEVTOOLSET_ROOTPATH --build-arg PREPEND_PATH --build-arg LD_LIBRARY_PATH_ARG
-	--rm -t quay.io/pypa/${POLICY}_${PLATFORM}:${COMMIT_SHA}
+	--rm -t ${DOCKER_IMAGE_NAME}${POLICY}_${PLATFORM}:${COMMIT_SHA}
 	-f docker/Dockerfile docker/
 "
 
@@ -120,7 +140,7 @@ else
 	exit 1
 fi
 
-docker run --rm -v $(pwd)/tests:/tests:ro quay.io/pypa/${POLICY}_${PLATFORM}:${COMMIT_SHA} /tests/run_tests.sh
+docker run --rm -v $(pwd)/tests:/tests:ro ${DOCKER_IMAGE_NAME}${POLICY}_${PLATFORM}:${COMMIT_SHA} /tests/run_tests.sh
 
 if [ "${MANYLINUX_BUILD_FRONTEND}" != "docker" ]; then
 	if [ -d $(pwd)/.buildx-cache-${POLICY}_${PLATFORM} ]; then

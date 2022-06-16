@@ -12,7 +12,7 @@ source $MY_DIR/build_utils.sh
 
 fixup-mirrors
 if [ "${AUDITWHEEL_POLICY}" == "manylinux2010" ] || [ "${AUDITWHEEL_POLICY}" == "manylinux2014" ]; then
-	yum -y update
+	yum -y update --disablerepo=cuda
 	if ! localedef -V &> /dev/null; then
 		# somebody messed up glibc-common package to squeeze image size, reinstall the package
 		fixup-mirrors

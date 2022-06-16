@@ -67,7 +67,7 @@ if [ "${AUDITWHEEL_POLICY}" == "manylinux2010" ]; then
 	# See https://unix.stackexchange.com/questions/41784/can-yum-express-a-preference-for-x86-64-over-i386-packages
 	echo "multilib_policy=best" >> /etc/yum.conf
 	fixup-mirrors
-	yum -y update
+	yum -y update --disablerepo=cuda
 	fixup-mirrors
 	yum -y install https://archives.fedoraproject.org/pub/archive/epel/6/x86_64/epel-release-6-8.noarch.rpm curl
 	fixup-mirrors
@@ -93,7 +93,7 @@ elif [ "${AUDITWHEEL_POLICY}" == "manylinux2014" ]; then
 	sed -i '/^override_install_langs=/d' /etc/yum.conf
 	# Exclude mirror holding broken package metadata
 	echo "exclude = d36uatko69830t.cloudfront.net" >> /etc/yum/pluginconf.d/fastestmirror.conf
-	yum -y update
+	yum -y update --disablerepo=cuda
 	yum -y install yum-utils curl
 	yum-config-manager --enable extras
 	TOOLCHAIN_DEPS="devtoolset-10-binutils devtoolset-10-gcc devtoolset-10-gcc-c++ devtoolset-10-gcc-gfortran"
