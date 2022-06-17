@@ -70,7 +70,7 @@ elif [ "${POLICY}" == "manylinux2014" ]; then
 		# modifications are local.
 		BASEIMAGE="nvcr.io/nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-centos7"
 	fi
-	DEVTOOLSET_ROOTPATH="/opt/rh/devtoolset-10/root"
+	DEVTOOLSET_ROOTPATH="/opt/rh/devtoolset-8/root"
 	PREPEND_PATH="${DEVTOOLSET_ROOTPATH}/usr/bin:"
 	if [ "${PLATFORM}" == "i686" ]; then
 		LD_LIBRARY_PATH_ARG="${DEVTOOLSET_ROOTPATH}/usr/lib:${DEVTOOLSET_ROOTPATH}/usr/lib/dyninst"

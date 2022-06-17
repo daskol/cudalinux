@@ -98,7 +98,9 @@ elif [ "${AUDITWHEEL_POLICY}" == "manylinux2014" ]; then
 	yum-config-manager --enable extras
 	TOOLCHAIN_DEPS="devtoolset-10-binutils devtoolset-10-gcc devtoolset-10-gcc-c++ devtoolset-10-gcc-gfortran"
 	if [ "${AUDITWHEEL_ARCH}" == "x86_64" ]; then
-		# Software collection (for devtoolset-10)
+		# NOTE We needs GCC version not later 8 in order to use NVCC.
+		TOOLCHAIN_DEPS="devtoolset-8-binutils devtoolset-8-gcc devtoolset-8-gcc-c++ devtoolset-8-gcc-gfortran"
+		# Software collection (for devtoolset-8)
 		yum -y install centos-release-scl-rh
 		# EPEL support (for yasm)
 		yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
